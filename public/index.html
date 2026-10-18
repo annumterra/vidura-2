@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vidura - your dependable advisor</title>
+<meta name="description" content="Paste a worrying message. Vidura tells you if it looks safe, uncertain or like a scam - in English, Hindi or Tamil.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Sans+Tamil:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: 'Noto Sans','Noto Sans Devanagari','Noto Sans Tamil',system-ui,sans-serif; }
+  .chat-bg { background-color:#efe7dd; background-image: radial-gradient(#e2d8cb 1px, transparent 1px); background-size: 18px 18px; }
+  .bubble-in { border-radius: 0.25rem 1rem 1rem 1rem; }
+  .bubble-out { border-radius: 1rem 0.25rem 1rem 1rem; }
+  .dots span { animation: blink 1.2s infinite; }
+  .dots span:nth-child(2){ animation-delay:.2s } .dots span:nth-child(3){ animation-delay:.4s }
+  @keyframes blink { 0%,80%,100%{opacity:.2} 40%{opacity:1} }
+  .rec { animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{ box-shadow:0 0 0 0 rgba(220,38,38,.5) } 50%{ box-shadow:0 0 0 10px rgba(220,38,38,0) } }
+</style>
+</head>
+<body class="bg-stone-200 min-h-screen flex items-center justify-center sm:p-4">
+<main class="w-full max-w-md h-screen sm:h-[880px] sm:max-h-[95vh] bg-white sm:rounded-3xl sm:shadow-2xl flex flex-col overflow-hidden">
+
+  <!-- header -->
+  <header class="bg-[#075e54] text-white px-4 py-3">
+    <div class="flex items-center gap-3">
+      <div class="w-11 h-11 rounded-full bg-amber-400 text-[#075e54] flex items-center justify-center text-xl font-bold shrink-0">V</div>
+      <div class="min-w-0 flex-1">
+        <h1 class="font-bold leading-tight">Vidura <span class="font-normal text-sm opacity-80" data-t="role">- Your Advisor</span></h1>
+        <p class="text-xs opacity-80 truncate" data-t="tagline">Forward first, then act.</p>
+      </div>
+    </div>
+    <div class="mt-3 flex gap-2" role="group" aria-label="Language">
+      <button data-lang="en" class="lang-btn flex-1 rounded-full py-1.5 text-sm font-semibold border border-white/40">English</button>
+      <button data-lang="hi" class="lang-btn flex-1 rounded-full py-1.5 text-sm font-semibold border border-white/40">हिन्दी</button>
+      <button data-lang="ta" class="lang-btn flex-1 rounded-full py-1.5 text-sm font-semibold border border-white/40">தமிழ்</button>
+    </div>
+  </header>
+
+  <!-- chat -->
+  <section id="chat" class="chat-bg flex-1 overflow-y-auto px-3 py-4 space-y-3" aria-live="polite"></section>
+
+  <!-- examples -->
+  <div class="bg-stone-50 border-t px-3 pt-2">
+    <p class="text-xs text-stone-500 mb-1" data-t="tryThese">Try one of these:</p>
+    <div id="examples" class="flex gap-2 overflow-x-auto pb-2"></div>
+  </div>
+
+  <!-- composer -->
+  <footer class="bg-stone-50 px-3 pb-3">
+    <div id="preview" class="hidden mb-2 flex items-center gap-2 bg-white border rounded-xl p-2">
+      <img id="previewImg" alt="" class="w-12 h-12 object-cover rounded-lg">
+      <span class="text-sm text-stone-600 flex-1" data-t="screenshotAdded">Screenshot added</span>
+      <button id="removeImg" class="text-sm text-red-600 font-semibold px-2" data-t="remove">Remove</button>
+    </div>
+    <div class="flex items-end gap-2">
+      <div class="flex-1 bg-white border rounded-3xl flex items-end px-2">
+        <label class="p-2 cursor-pointer text-stone-500 hover:text-stone-800" title="Screenshot">
+          <input id="file" type="file" accept="image/*" class="hidden">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.4 11.1l-9.2 9.2a5.5 5.5 0 0 1-7.8-7.8l9.2-9.2a3.7 3.7 0 0 1 5.2 5.2l-9.2 9.2a1.8 1.8 0 0 1-2.6-2.6l8.5-8.5"/></svg>
+        </label>
+        <textarea id="text" rows="1" maxlength="3000" class="flex-1 resize-none outline-none py-3 px-1 max-h-32 bg-transparent" data-ph="pasteHere" placeholder="Paste the message here"></textarea>
+      </div>
+      <button id="mic" class="hidden w-12 h-12 rounded-full bg-white border text-stone-700 flex items-center justify-center shrink-0" title="Speak" aria-label="Speak">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+      </button>
+      <button id="send" class="w-12 h-12 rounded-full bg-[#128c7e] text-white flex items-center justify-center shrink-0 disabled:opacity-50" aria-label="Check">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+      </button>
+    </div>
+    <p class="text-[11px] text-stone-500 mt-2 text-center leading-snug" data-t="privacy">Prototype. Your message is checked and then forgotten - nothing is saved. Please do not share OTPs, PINs or bank details.</p>
+  </footer>
+</main>
+
+<script>
+const T = {
+  en: {
+    role: "- Your Advisor", tagline: "Forward first, then act.",
+    tryThese: "Try one of these:", pasteHere: "Paste the message here",
+    screenshotAdded: "Screenshot added", remove: "Remove",
+    privacy: "Prototype. Your message is checked and then forgotten - nothing is saved. Please do not share OTPs, PINs or bank details.",
+    welcome: "🙏 Namaste! I am Vidura, your dependable advisor.\n\nIf a message worries you, paste it here (or add a screenshot). I will tell you:\n🟢 Looks safe\n🟡 Not sure - be careful\n🔴 Likely scam\n\nForward first, then act.",
+    listen: "🔊 Listen", stop: "⏹ Stop", checking: "Vidura is checking",
+    youSent: "(screenshot)", err: "Something went wrong. Please try again.",
+    micDenied: "I could not use the microphone. Please allow it, or type the message.",
+    listening: "Listening... tap again to stop", transcribing: "Writing down what you said...",
+    sign: "- Vidura, your dependable advisor",
+    examples: [
+      ["🚔 Police call", "This is Inspector Sharma, Mumbai Cyber Crime. You are under digital arrest. Stay on this video call and transfer Rs 95,000 now. Do not tell your family."],
+      ["🎁 KBC prize", "Congratulations! You have won Rs 25 lakh in the KBC lucky draw. To claim your prize pay Rs 12,500 processing fee today. Click http://kbc-claim.in/win"],
+      ["👦 'Grandson'", "Hi Nani, this is my new number. I lost my phone and I am in trouble. Please send Rs 20,000 on GPay urgently. Don't tell Mummy."],
+      ["💡 Electricity", "Dear customer, your electricity will be disconnected tonight at 9.30 pm. Call 98XXXXXX10 immediately and pay the pending amount."],
+      ["🙂 Family", "Beta, bhajan at the temple at 7 pm today. Will you come? Bring Nani's shawl. - Mummy"]
+    ]
+  },
+  hi: {
+    role: "- आपका सलाहकार", tagline: "पहले भेजें, फिर कदम उठाएं।",
+    tryThese: "इनमें से कोई आज़माएं:", pasteHere: "संदेश यहाँ चिपकाएं",
+    screenshotAdded: "स्क्रीनशॉट जोड़ा गया", remove: "हटाएं",
+    privacy: "प्रोटोटाइप। आपका संदेश जाँचकर भुला दिया जाता है - कुछ भी सेव नहीं होता। कृपया OTP, PIN या बैंक की जानकारी न भेजें।",
+    welcome: "🙏 नमस्ते! मैं विदुर हूँ, आपका भरोसेमंद सलाहकार।\n\nअगर कोई संदेश आपको परेशान करे, तो उसे यहाँ चिपकाएं (या स्क्रीनशॉट जोड़ें)। मैं बताऊँगा:\n🟢 सुरक्षित लगता है\n🟡 पक्का नहीं - सावधान रहें\n🔴 धोखा लगता है\n\nपहले भेजें, फिर कदम उठाएं।",
+    listen: "🔊 सुनें", stop: "⏹ रोकें", checking: "विदुर जाँच रहा है",
+    youSent: "(स्क्रीनशॉट)", err: "कुछ गड़बड़ हो गई। कृपया फिर कोशिश करें।",
+    micDenied: "माइक्रोफ़ोन नहीं चल पाया। कृपया उसे अनुमति दें, या संदेश टाइप करें।",
+    listening: "सुन रहा हूँ... रोकने के लिए फिर दबाएं", transcribing: "आपकी बात लिख रहा हूँ...",
+    sign: "- विदुर, आपका भरोसेमंद सलाहकार",
+    examples: [
+      ["🚔 पुलिस कॉल", "मैं इंस्पेक्टर शर्मा, मुंबई साइबर क्राइम से बोल रहा हूँ। आप डिजिटल अरेस्ट में हैं। इस वीडियो कॉल पर बने रहें और अभी 95,000 रुपये ट्रांसफर करें। अपने परिवार को न बताएं।"],
+      ["🎁 KBC इनाम", "बधाई हो! आपने KBC लकी ड्रॉ में 25 लाख रुपये जीते हैं। इनाम पाने के लिए आज ही 12,500 रुपये प्रोसेसिंग फ़ीस जमा करें। लिंक: http://kbc-claim.in/win"],
+      ["👦 'पोता'", "नानी, यह मेरा नया नंबर है। मेरा फ़ोन खो गया और मैं मुसीबत में हूँ। जल्दी से GPay पर 20,000 रुपये भेजो। मम्मी को मत बताना।"],
+      ["💡 बिजली", "प्रिय ग्राहक, आज रात 9.30 बजे आपकी बिजली कट जाएगी। तुरंत 98XXXXXX10 पर कॉल करें और बकाया रकम जमा करें।"],
+      ["🙂 परिवार", "बेटा, आज शाम 7 बजे मंदिर में भजन है। आओगे? नानी की शॉल लेते आना। - मम्मी"]
+    ]
+  },
+  ta: {
+    role: "- உங்கள் ஆலோசகர்", tagline: "முதலில் அனுப்புங்கள், பிறகு செயல்படுங்கள்.",
+    tryThese: "இவற்றில் ஒன்றை முயற்சிக்கவும்:", pasteHere: "செய்தியை இங்கே ஒட்டவும்",
+    screenshotAdded: "ஸ்கிரீன்ஷாட் சேர்க்கப்பட்டது", remove: "நீக்கு",
+    privacy: "முன்மாதிரி. உங்கள் செய்தி சோதிக்கப்பட்டு மறக்கப்படும் - எதுவும் சேமிக்கப்படாது. OTP, PIN, வங்கி விவரங்களை பகிர வேண்டாம்.",
+    welcome: "🙏 வணக்கம்! நான் விதுரன், உங்கள் நம்பகமான ஆலோசகர்.\n\nஏதேனும் செய்தி உங்களைக் கவலைப்படுத்தினால், அதை இங்கே ஒட்டுங்கள் (அல்லது ஸ்கிரீன்ஷாட் சேர்க்கவும்). நான் சொல்கிறேன்:\n🟢 பாதுகாப்பாகத் தெரிகிறது\n🟡 உறுதியாக இல்லை - கவனம்\n🔴 மோசடி போலத் தெரிகிறது\n\nமுதலில் அனுப்புங்கள், பிறகு செயல்படுங்கள்.",
+    listen: "🔊 கேளுங்கள்", stop: "⏹ நிறுத்து", checking: "விதுரன் சோதிக்கிறார்",
+    youSent: "(ஸ்கிரீன்ஷாட்)", err: "ஏதோ தவறு நடந்தது. மீண்டும் முயற்சிக்கவும்.",
+    micDenied: "மைக்ரோஃபோனைப் பயன்படுத்த முடியவில்லை. அனுமதி கொடுங்கள், அல்லது செய்தியை தட்டச்சு செய்யுங்கள்.",
+    listening: "கேட்கிறேன்... நிறுத்த மீண்டும் தட்டவும்", transcribing: "நீங்கள் சொன்னதை எழுதுகிறேன்...",
+    sign: "- விதுரன், உங்கள் நம்பகமான ஆலோசகர்",
+    examples: [
+      ["🚔 போலீஸ் அழைப்பு", "நான் இன்ஸ்பெக்டர் ஷர்மா, மும்பை சைபர் கிரைமிலிருந்து பேசுகிறேன். நீங்கள் டிஜிட்டல் கைதில் உள்ளீர்கள். இந்த வீடியோ அழைப்பிலேயே இருங்கள், உடனே 95,000 ரூபாய் அனுப்புங்கள். குடும்பத்தினரிடம் சொல்லாதீர்கள்."],
+      ["🎁 KBC பரிசு", "வாழ்த்துகள்! KBC அதிர்ஷ்ட குலுக்கலில் நீங்கள் 25 லட்சம் ரூபாய் வென்றுள்ளீர்கள். பரிசைப் பெற இன்றே 12,500 ரூபாய் கட்டணம் செலுத்துங்கள். http://kbc-claim.in/win"],
+      ["👦 'பேரன்'", "பாட்டி, இது என் புதிய எண். என் போன் தொலைந்துவிட்டது, நான் ஆபத்தில் இருக்கிறேன். உடனே GPay-இல் 20,000 ரூபாய் அனுப்புங்கள். அம்மாவிடம் சொல்லாதீர்கள்."],
+      ["💡 மின்சாரம்", "அன்புள்ள வாடிக்கையாளரே, இன்று இரவு 9.30 மணிக்கு உங்கள் மின்சாரம் துண்டிக்கப்படும். உடனடியாக 98XXXXXX10 எண்ணை அழைத்து நிலுவைத் தொகையைச் செலுத்துங்கள்."],
+      ["🙂 குடும்பம்", "கண்ணா, இன்று மாலை 7 மணிக்கு கோவிலில் பஜனை. வருவாயா? பாட்டியின் சால்வையை எடுத்து வா. - அம்மா"]
+    ]
+  }
+};
+
+const VERDICT = {
+  green:  { emoji: "🟢", bar: "bg-green-500",  bg: "bg-green-50",  text: "text-green-800"  },
+  yellow: { emoji: "🟡", bar: "bg-amber-400",  bg: "bg-amber-50",  text: "text-amber-900"  },
+  red:    { emoji: "🔴", bar: "bg-red-500",    bg: "bg-red-50",    text: "text-red-800"    }
+};
+
+const $ = (id) => document.getElementById(id);
+const chat = $("chat"), textEl = $("text"), sendBtn = $("send"), micBtn = $("mic");
+let lang = localStorage.getItem("vidura_lang") || "en";
+if (!T[lang]) lang = "en";
+let image = null;            // {b64, type, dataUrl}
+let features = { voice: false };
+let currentAudio = null, currentListenBtn = null;
+
+/* ---------- language ---------- */
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-t]").forEach(el => { el.textContent = T[lang][el.dataset.t]; });
+  textEl.placeholder = T[lang].pasteHere;
+  document.querySelectorAll(".lang-btn").forEach(b => {
+    const on = b.dataset.lang === lang;
+    b.classList.toggle("bg-white", on); b.classList.toggle("text-[#075e54]", on);
+    b.setAttribute("aria-pressed", on);
+  });
+  const ex = $("examples"); ex.innerHTML = "";
+  T[lang].examples.forEach(([label, msg]) => {
+    const b = document.createElement("button");
+    b.className = "shrink-0 text-sm bg-white border rounded-full px-3 py-1.5 hover:bg-stone-100";
+    b.textContent = label;
+    b.onclick = () => { textEl.value = msg; autosize(); textEl.focus(); };
+    ex.appendChild(b);
+  });
+  const w = $("welcome"); if (w) w.querySelector("p").textContent = T[lang].welcome;
+}
+document.querySelectorAll(".lang-btn").forEach(b => b.onclick = () => {
+  lang = b.dataset.lang; localStorage.setItem("vidura_lang", lang); applyLang();
+});
+
+/* ---------- chat bubbles ---------- */
+function scrollDown() { chat.scrollTop = chat.scrollHeight; }
+function addUserBubble(text, imgUrl) {
+  const d = document.createElement("div"); d.className = "flex justify-end";
+  const b = document.createElement("div");
+  b.className = "bubble-out bg-[#d9fdd3] max-w-[85%] px-3 py-2 shadow-sm";
+  if (imgUrl) { const i = document.createElement("img"); i.src = imgUrl; i.alt = ""; i.className = "rounded-lg mb-1 max-h-48"; b.appendChild(i); }
+  if (text) { const p = document.createElement("p"); p.className = "whitespace-pre-wrap break-words"; p.textContent = text; b.appendChild(p); }
+  else if (imgUrl) { const p = document.createElement("p"); p.className = "text-sm text-stone-600"; p.textContent = T[lang].youSent; b.appendChild(p); }
+  d.appendChild(b); chat.appendChild(d); scrollDown();
+}
+function addBotText(text, id) {
+  const d = document.createElement("div"); d.className = "flex"; if (id) d.id = id;
+  const b = document.createElement("div");
+  b.className = "bubble-in bg-white max-w-[88%] px-3 py-2 shadow-sm";
+  const p = document.createElement("p"); p.className = "whitespace-pre-wrap"; p.textContent = text;
+  b.appendChild(p); d.appendChild(b); chat.appendChild(d); scrollDown(); return d;
+}
+function addTyping() {
+  const d = document.createElement("div"); d.className = "flex"; d.id = "typing";
+  d.innerHTML = '<div class="bubble-in bg-white px-3 py-2 shadow-sm text-stone-500 text-sm"><span class="dots"><span>●</span><span>●</span><span>●</span></span></div>';
+  chat.appendChild(d); scrollDown();
+}
+function removeTyping() { const t = $("typing"); if (t) t.remove(); }
+
+function addVerdict(r) {
+  const v = VERDICT[r.verdict] || VERDICT.yellow;
+  const d = document.createElement("div"); d.className = "flex";
+  const card = document.createElement("div");
+  card.className = "bubble-in bg-white max-w-[92%] shadow-sm overflow-hidden";
+  const bar = document.createElement("div"); bar.className = v.bar + " h-2";
+  const body = document.createElement("div"); body.className = "px-3 py-3 space-y-2";
+  const head = document.createElement("p"); head.className = "font-bold text-lg " + v.text;
+  head.textContent = v.emoji + " " + r.label;
+  const reason = document.createElement("p"); reason.textContent = r.reason;
+  const next = document.createElement("p"); next.className = "font-semibold rounded-lg px-2 py-2 " + v.bg + " " + v.text;
+  next.textContent = "👉 " + r.next_step;
+  body.append(head, reason, next);
+  if (r.tip) { const tip = document.createElement("p"); tip.className = "text-sm text-stone-600"; tip.textContent = "💡 " + r.tip; body.appendChild(tip); }
+  const sign = document.createElement("p"); sign.className = "text-xs text-stone-500"; sign.textContent = T[lang].sign;
+  const listen = document.createElement("button");
+  listen.className = "text-sm font-semibold text-[#075e54] border border-[#075e54]/30 rounded-full px-3 py-1";
+  listen.textContent = T[lang].listen;
+  const spoken = [r.label, r.reason, r.next_step, r.tip].filter(Boolean).join(". ");
+  listen.onclick = () => toggleListen(listen, spoken, r.lang || lang);
+  const row = document.createElement("div"); row.className = "flex items-center justify-between gap-2"; row.append(listen, sign);
+  body.appendChild(row);
+  card.append(bar, body); d.appendChild(card); chat.appendChild(d); scrollDown();
+}
+
+/* ---------- listen (Sarvam voice, with browser voice as backup) ---------- */
+function stopAudio() {
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  if (window.speechSynthesis) speechSynthesis.cancel();
+  if (currentListenBtn) { currentListenBtn.textContent = T[lang].listen; currentListenBtn = null; }
+}
+async function toggleListen(btn, text, l) {
+  if (currentListenBtn === btn) { stopAudio(); return; }
+  stopAudio();
+  currentListenBtn = btn; btn.textContent = T[lang].stop;
+  const done = () => { if (currentListenBtn === btn) { btn.textContent = T[lang].listen; currentListenBtn = null; currentAudio = null; } };
+  if (features.voice) {
+    try {
+      const r = await fetch("/api/speak", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text, lang: l }) });
+      if (!r.ok) throw new Error("speak");
+      const j = await r.json();
+      if (currentListenBtn !== btn) return;
+      const a = new Audio("data:" + (j.mime || "audio/wav") + ";base64," + j.audio_b64);
+      currentAudio = a; a.onended = done; a.onerror = done; await a.play(); return;
+    } catch (e) { /* fall through to browser voice */ }
+  }
+  if (window.speechSynthesis) {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = { en: "en-IN", hi: "hi-IN", ta: "ta-IN" }[l] || "en-IN"; u.rate = 0.9;
+    u.onend = done; u.onerror = done; speechSynthesis.speak(u);
+  } else { done(); }
+}
+
+/* ---------- image (resized in the browser to keep uploads small) ---------- */
+$("file").onchange = (e) => {
+  const f = e.target.files[0]; e.target.value = "";
+  if (!f) return;
+  const img = new Image(), url = URL.createObjectURL(f);
+  img.onload = () => {
+    const max = 1280, s = Math.min(1, max / Math.max(img.width, img.height));
+    const c = document.createElement("canvas"); c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    const dataUrl = c.toDataURL("image/jpeg", 0.8);
+    image = { b64: dataUrl.split(",")[1], type: "image/jpeg", dataUrl };
+    $("previewImg").src = dataUrl; $("preview").classList.remove("hidden");
+    URL.revokeObjectURL(url);
+  };
+  img.onerror = () => URL.revokeObjectURL(url);
+  img.src = url;
+};
+$("removeImg").onclick = () => { image = null; $("preview").classList.add("hidden"); };
+
+/* ---------- send ---------- */
+function autosize() { textEl.style.height = "auto"; textEl.style.height = Math.min(textEl.scrollHeight, 128) + "px"; }
+textEl.addEventListener("input", autosize);
+textEl.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } });
+sendBtn.onclick = send;
+
+/* Which language is this message written in? (by script; English/Hinglish returns null) */
+function scriptLang(text) {
+  const letters = (text.match(/\p{L}/gu) || []).length;
+  if (!letters) return null;
+  const share = (re) => (text.match(re) || []).length / letters;
+  if (share(/[\u0B80-\u0BFF]/g) > 0.3) return "ta";
+  if (share(/[\u0900-\u097F]/g) > 0.3) return "hi";
+  return null;
+}
+
+async function send() {
+  const text = textEl.value.trim();
+  if ((!text && !image) || sendBtn.disabled) return;
+  stopAudio();
+  // A Hindi/Tamil message gets its answer in that language (the switch follows).
+  // An English message is answered in whichever language is selected.
+  const written = scriptLang(text);
+  if (written && written !== lang) { lang = written; localStorage.setItem("vidura_lang", lang); applyLang(); }
+  const sent = image;
+  addUserBubble(text, sent && sent.dataUrl);
+  textEl.value = ""; autosize(); image = null; $("preview").classList.add("hidden");
+  sendBtn.disabled = true; addTyping();
+  try {
+    const r = await fetch("/api/check", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, lang, image_b64: sent && sent.b64, image_type: sent && sent.type })
+    });
+    const j = await r.json().catch(() => ({}));
+    removeTyping();
+    if (!r.ok) addBotText("🙏 " + (j.error || T[lang].err));
+    else addVerdict(j);
+  } catch (e) {
+    removeTyping(); addBotText("🙏 " + T[lang].err);
+  } finally { sendBtn.disabled = false; }
+}
+
+/* ---------- microphone (Sarvam speech-to-text) ---------- */
+let rec = null, recChunks = [], recTimer = null;
+micBtn.onclick = async () => {
+  if (rec && rec.state === "recording") { rec.stop(); return; }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    recChunks = [];
+    rec = new MediaRecorder(stream);
+    rec.ondataavailable = (e) => { if (e.data.size) recChunks.push(e.data); };
+    rec.onstop = async () => {
+      clearTimeout(recTimer); stream.getTracks().forEach(t => t.stop());
+      micBtn.classList.remove("rec", "bg-red-600", "text-white");
+      const blob = new Blob(recChunks, { type: rec.mimeType || "audio/webm" });
+      textEl.placeholder = T[lang].transcribing;
+      try {
+        const fd = new FormData(); fd.append("audio", blob, "voice." + (blob.type.includes("mp4") ? "m4a" : "webm")); fd.append("lang", lang);
+        const r = await fetch("/api/transcribe", { method: "POST", body: fd });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) addBotText("🙏 " + (j.error || T[lang].err));
+        else if (j.text) { textEl.value = (textEl.value ? textEl.value + " " : "") + j.text; autosize(); }
+      } catch (e) { addBotText("🙏 " + T[lang].err); }
+      textEl.placeholder = T[lang].pasteHere; textEl.focus();
+    };
+    rec.start();
+    micBtn.classList.add("rec", "bg-red-600", "text-white");
+    textEl.placeholder = T[lang].listening;
+    recTimer = setTimeout(() => rec && rec.state === "recording" && rec.stop(), 30000);
+  } catch (e) { addBotText("🙏 " + T[lang].micDenied); }
+};
+
+/* ---------- start ---------- */
+(function init() {
+  const d = document.createElement("div"); d.className = "flex"; d.id = "welcome";
+  d.innerHTML = '<div class="bubble-in bg-white max-w-[88%] px-3 py-2 shadow-sm"><p class="whitespace-pre-wrap"></p></div>';
+  chat.appendChild(d);
+  applyLang();
+  fetch("/api/config").then(r => r.json()).then(c => {
+    features = c; if (c.voice && window.MediaRecorder) micBtn.classList.remove("hidden");
+  }).catch(() => {});
+})();
+</script>
+</body>
+</html>
