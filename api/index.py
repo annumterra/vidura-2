@@ -7,6 +7,7 @@ Routes
   POST /api/speak       text -> spoken audio (Sarvam)
   GET  /api/config      which features are switched on
   GET  /api/health      simple "I'm alive" check
+  POST /api/whatsapp    incoming WhatsApp message from Twilio (see vidura/whatsapp.py)
 
 Privacy: messages, screenshots and voice are never saved or logged.
 Vercel functions have no permanent disk, so there are no counters either.
@@ -40,7 +41,7 @@ _load_dotenv(os.path.join(_ROOT, ".env"))
 
 from flask import Flask, jsonify, request, send_from_directory  # noqa: E402
 
-from vidura import engine, rules, sarvam  # noqa: E402
+from vidura import engine, rules, sarvam, whatsapp  # noqa: E402
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger("vidura")
@@ -165,6 +166,12 @@ def api_speak():
         log.warning("speak failed: %s", type(e).__name__)
         return jsonify(error="Could not read this aloud right now."), 502
     return jsonify(audio_b64=audio, mime="audio/wav")
+
+
+@app.post("/api/whatsapp")
+def api_whatsapp():
+    """Incoming WhatsApp message from Twilio. All the logic is in vidura/whatsapp.py."""
+    return whatsapp.webhook(request, allowed)
 
 
 # Local development only: Vercel serves public/ by itself.
